@@ -1,0 +1,56 @@
+
+
+<div style="card">
+	<div class="card-body">
+		<h4 class="card-title">Printers</h4>
+		<button onclick="reload_printers()">Reload</button>
+
+		<div class="card-text row" id="printers_list">
+		
+		</div>
+	</div>
+</div>
+
+
+{% include 'index.printers.card.template.html' %}
+
+<script type="text/javascript">
+	
+
+function reload_printers(){
+	$.ajax({
+        type: "GET",
+        contentType: "application/json; charset=utf-8",
+        url: "/printers",
+        success: function( data, textStatus, jQxhr ){
+			console.log(data);
+			$("#printers_list").empty();
+			for(i in data){
+				var p = data[i];
+				var tmp = document.getElementById("printer_card_template").content.cloneNode(true);
+				tmp.querySelector('.name').innerText = p.info.name;
+				tmp.querySelector('.web_link').href = p.info.url;
+				tmp.querySelector('.printer_state').innerText = p.status.state.text;
+
+				var temp = "";
+				for(t in p.status.temperature){
+					temp += " <span><b>"+ t + ": ";
+					temp += p.status.temperature[t].actual + "</b>/";
+					temp += p.status.temperature[t].target + "</span>";
+				}
+				tmp.querySelector('.printer_temperatures').innerHTML = temp;
+				tmp.querySelector('.printer_lastupdate').innerText = Date(p.info.last_update.$date);
+				tmp.querySelector('.printer_progress').innerText = p.status.progress.completion;
+				tmp.querySelector('.printer_progress').style.width = String(p.status.progress.completion)+"%";
+				$("#printers_list").append(tmp);
+			}
+        },
+        error: function( jqXhr, textStatus, errorThrown ){
+            console.log( errorThrown );
+        }
+    });
+}
+
+
+
+</script>
