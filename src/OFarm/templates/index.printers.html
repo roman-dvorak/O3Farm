@@ -45,23 +45,36 @@
 
 
 function load_printer(id){
+	$("#printer-details .printer-values").empty();
+	$("#printer-details").css('display', 'block');
 	$.ajax({
         type: "GET",
         contentType: "application/json; charset=utf-8",
         url: "/printer/"+id,
         success: function( data, textStatus, jQxhr ){
+        	var data = JSON.parse(data);
 			console.log(data);
+			actual_printer = data['_id']['$oid'];
+			$("#printer-details .printer-name").text(data['name']);
+			$("#printer-details .printer-id").text(data['_id']['$oid']);
+			$("#printer-details .printer-status-local-state").val(data.local_state);
+			$("#printer-details .printer-status-state").text(data.status.state);
+			$("#printer-details .printer-status-file").text(data.status.job.file.name);
+			$("#printer-details .printer-status-tpt").text(data.status.job.lastPrintTime/60.0);
+			$("#printer-details .printer-status-pt").text(data.status.job.estimatedPrintTime/60.0);
+			$("#printer-details .printer-status-ptl").text(data.status.job.estimatedPrintTime/60.0);
+			var t = "";
+			t += ", Ol: " + data.online;
+			t += ", Dist: " + data.disabled;
+			$("#printer-details .printer-status-flags").text(t);
 			
         },
         error: function( jqXhr, textStatus, errorThrown ){
             console.log( errorThrown );
         }
     });
-
-
-
 }
-	
+
 
 function reload_printers(){
 	$.ajax({
@@ -74,23 +87,42 @@ function reload_printers(){
 			for(i in data){
 				var p = data[i];
 				var tmp = document.getElementById("printer_card_template").content.cloneNode(true);
-				tmp.querySelector('.name').innerText = p.info.name;
-				tmp.querySelector('.web_link').href = p.info.url;
-				tmp.querySelector('.printer_state').innerText = p.status.state;
+				try{
+					tmp.querySelector('.name').innerText = p.name;
+					tmp.querySelector('.web_link').href = p.url;
+					tmp.querySelector('.printer_state').innerText = p.status.state;
 
-				tmp.querySelector('.card-header').classList.add("local-status-bg-"+String(p.status.local_state));
-				tmp.querySelector('.card-header').setAttribute("onclick","load_printer('"+p.info.id+"');");
+					var lstate = "Neznamo";
+					if(!p.online){
+						if(p.disabled){
+							lstate = "Disabled, Offline";
+						}else{
+							lstate = "Povoleno, Offline"	
+						}
+					}else{
+						if(p.disabled){
+							lstate = "Disabled, Online";
+						}else{
+							lstate = "Povoleno, Online"	
+						}
+					}
 
-				var temp = "";
-				for(t in p.status.temperature){
-					temp += " <span><b>"+ t + ": ";
-					temp += p.status.temperature[t].actual + "</b>/";
-					temp += p.status.temperature[t].target + "</span>";
-				}
-				tmp.querySelector('.printer_temperatures').innerHTML = temp;
-				tmp.querySelector('.printer_lastupdate').innerText = Date(p.info.last_update.$date);
-				tmp.querySelector('.printer_progress').innerText = p.status.progress.completion;
-				tmp.querySelector('.printer_progress').style.width = String(p.status.progress.completion)+"%";
+					tmp.querySelector('.printer_local_state').innerText = lstate;
+
+					tmp.querySelector('.card-header').classList.add("local-status-bg-"+String(p.status.local_state));
+					tmp.querySelector('.card-header').setAttribute("onclick","load_printer('"+p._id.$oid+"');");
+
+					var temp = "";
+					for(t in p.status.temperature){
+						temp += " <span><b>"+ t + ": ";
+						temp += p.status.temperature[t].actual + "</b>/";
+						temp += p.status.temperature[t].target + "</span>";
+					}
+					tmp.querySelector('.printer_temperatures').innerHTML = temp;
+					tmp.querySelector('.printer_lastupdate').innerText = Date(p.last_update.$date);
+					tmp.querySelector('.printer_progress').innerText = p.status.progress.completion;
+					tmp.querySelector('.printer_progress').style.width = String(p.status.progress.completion)+"%";
+				}catch(e){console.log("CHYBA", e);}
 				$("#printers_list").append(tmp);
 			}
         },
@@ -99,6 +131,8 @@ function reload_printers(){
         }
     });
 }
+
+reload_printers();
 
 
 

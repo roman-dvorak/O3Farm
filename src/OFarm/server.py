@@ -53,48 +53,36 @@ class server():
         self.printers = []
         self.printer_class = {}
 
-        self.pf = PrinterFarm()
-        self.api = Api()
+        self.db = pymongo.MongoClient('localhost', 27017)['OFarm']
+
+        self.pf = PrinterFarm(self.db)
+        #self.pf.start()
+        self.api = Api(self.db)
         self.app = Flask('OFarm')
         self.start()
 
+        self.app.config['TEMPLATES_AUTO_RELOAD'] = True
+        self.app.config['TESTING'] = True
+        self.app.config['DEBUG'] = True
+        self.app.config['ENV'] = "development"
         self.app.run(host="0.0.0.0", port=9006)
 
 
 
     def start(self):
-        self.db = pymongo.MongoClient('localhost', 27017)['OFarm']
 
-        self.load_printers()
+        self.pf.load_printers()
+        #self.load_printers()
         
         self.queue = Queue(connection=Redis())
         self.scheduler = Scheduler(connection=Redis())
+
         self.app.add_url_rule('/', 'index', self.index)
-        self.app.add_url_rule('/upload', 'upload', self.upload_file, methods=["GET", "POST"])
-        self.app.add_url_rule('/get_files', 'get_files', self.get_files)
         self.app.add_url_rule('/printers', 'printers', self.get_printers)
         self.app.add_url_rule('/printer/<id>/', 'printer', self.printer)
 
         self.api.add_rules(self.app)
-
-    def load_printers(self):
-        print("Load printers")
-        printers = list(self.db.printers.find())
-        self.printers = printers
-
-        for printer in self.printers:
-            if printer['_id'] not in self.printer_class:
-                #TODO: handle different API types for other printers
-                print("loading printer", printer['name'])
-                self.printer_class[printer['_id']] = {}
-                self.printer_class[printer['_id']]['class'] = OctoprintPrinter()
-                self.printer_class[printer['_id']]['class'].load_from_db(printer)
-                #self.printer_class[printer['_id']]['printer'] = self.printer_class[printer['_id']]['class'].get_info()
-                #self.printer_class[printer['_id']]['status'] = self.printer_class[printer['_id']]['class'].get_status()
-
-    def update_printers(self):
-        for p in self.printer_class:
-            self.printer_class[p]['class'].update()
+        self.pf.add_rules(self.app)
 
 
     def index(self):
@@ -106,17 +94,8 @@ class server():
 
 
     def get_printers(self, status = True):
-        self.update_printers()
-        out = []
-
-        for p in self.printers:
-            ps = {}
-            ps['info'] = self.printer_class[p['_id']]['class'].get_info()
-            ps['status'] = self.printer_class[p['_id']]['class'].get_status()
-            out.append(ps)
-
         response = self.app.response_class(
-            response=bson.json_util.dumps(out),
+            response=bson.json_util.dumps(self.pf.get_printers(update = True)),
             status=200,
             mimetype='application/json'
         )
@@ -124,31 +103,6 @@ class server():
 
     def printer(self, id):
         id = bson.ObjectId(id)
-        p = self.printer_class[id]['class']
-        print(p.name)
-        return(p.get_status(update = True))
-
-
-    def upload_file(self):
-        if request.method == 'POST':
-            if 'file' not in request.files:
-                flash('No file part')
-                return redirect(request.url)
-            file = request.files['file']
-            if file.filename == '':
-                flash('No selected file')
-                return redirect(request.url)
-            print(file)
-            print(file.filename)
-            
-            file.save(os.path.join("/home/roman/upload/", file.filename))
-            return redirect(url_for('index'))
-        #return 'ok'
-
-    def get_files(self):
-        lsdir = os.listdir('/home/roman/upload')
-        dirs = {}
-        for f in lsdir:
-            dirs[f] = {}
-
-        return dirs
+        p = self.pf.get_printer(id, update = True)
+        print(p['name'])
+        return(bson.json_util.dumps(p))

@@ -1,72 +1,63 @@
 <div class="card mt-3">
   <h5 class="card-header">OFarm - Testovací farma</h5>
-  <div class="card-body">
+  <div class="card-body" id="printer-details" style="display: none;">
 
-  	<h3 class="mb-0"> ZVPPp </h3>
-  	<small class="text-muted">ou334pkky34kkieki</small>
+  	<h3 class="mb-0 printer-name printer-values"> Prinetr </h3>
+  	<small class="text-muted printer-id printer-values">id</small>
   	<hr>
   	<span>Local state:</span>
-  	<select>
-  		<option disabled>OffLine</option>
-  		<option>Disabled</option>
-  		<option>Ready</option>
-  		<option disabled>Printing</option>
-  		<option>Post print</option>
-  		<option disabled>Error</option>
+  	<select class="printer-status-local-state">
+  		<option value=0 disabled>Ready</option>
+  		<option value=1 disabled>Printing</option>
+  		<option value=2 disabled>Printed</option>
   	</select>
 
   	<hr>
+
+	<button onclick="printer_eneable(true)">Eneable</button>
+	<button onclick="printer_eneable(false)">Disable</button>
+
+  	<hr>
   	<span>State:</span>
-  	<bold>[State]</bold>
+  	<bold class="printer-status-state printer-values">[State]</bold>
   	<br>
 
   	<span>File:</span>
-  	<bold>[State]</bold>
+  	<bold class="printer-status-file printer-values">[State]</bold>
   	<br>
 
   	<span>Total print time:</span>
-  	<bold>[State]</bold>
+  	<bold class="printer-status-tpt printer-values">[State]</bold>
   	<br>
 
   	<span>Print Time:</span>
-  	<bold>[State]</bold>
+  	<bold class="printer-status-pt printer-values">[State]</bold>
   	<br>
 
   	<span>Print Time Left:</span>
-  	<bold>[State]</bold>
+  	<bold class="printer-status-ptl printer-values">[State]</bold>
+
+
+  	<span>Print Time Left:</span>
+  	<bold class="printer-status-flags printer-values">[State]</bold>
 
 
   </div>
 </div>
 
 <div class="card mt-2">
-    <h5 class="card-header">File browser</h5>
-  <div class="card-body p-0 " style="max-height: 10cm; overflow-y: auto;">
+    <div class="card-header flex-md-nowrap d-flex justify-content-between">
+    	<h5>File browser</h5>
+    	<i onclick="load_files()">[R]</i>
+    </div>
 
-	    <ul class="list-group list-group-flush">
-		    <li class="list-group-item">File a</li>
-		    <li class="list-group-item">File b</li>
-		    <li class="list-group-item">File c</li>
-		    <li class="list-group-item">File a</li>
-		    <li class="list-group-item">File b</li>
-		    <li class="list-group-item">File c</li>
-		    <li class="list-group-item">File a</li>
-		    <li class="list-group-item">File b</li>
-		    <li class="list-group-item">File c</li>
-		    <li class="list-group-item">File a</li>
-		    <li class="list-group-item">File b</li>
-		    <li class="list-group-item">File c</li>
-		    <li class="list-group-item">File a</li>
-		    <li class="list-group-item">File b</li>
-		    <li class="list-group-item">File c</li>
-		    <li class="list-group-item">File a</li>
-		    <li class="list-group-item">File b</li>
-		    <li class="list-group-item">File c</li>
+  <div class="card-body p-0 " style="max-height: 10cm; overflow-y: auto;">
+	    <ul class="list-group list-group-flush file-list-holder">
 		</ul>
 	</div>
 
   <div class="card-footer">
-	<form method=post enctype=multipart/form-data action="/upload">
+	<form method=post enctype=multipart/form-data action="/api/files">
       <input type=file name=file>
       <input type=submit value=Upload>
     </form>
@@ -78,3 +69,61 @@
 	
 
 </div>
+
+
+
+
+
+<script type="text/javascript">
+
+	function printer_eneable(eneable) {
+		$.ajax({
+	        type: "POST",
+	        //content-type: "application/json",
+        	contentType: "application/json",
+        	dataType: "json",
+	        url: "/api/of/eneable",
+	        data: JSON.stringify({
+	        	'id': actual_printer,
+	        	'eneable': eneable
+	        }),
+	        success: function( data, textStatus, jQxhr ){
+				console.log(data)
+	        },
+	        error: function( jqXhr, textStatus, errorThrown ){
+	            console.log( errorThrown );
+	        }
+	    });
+	}
+	
+
+</script>
+
+
+<script type="text/javascript">
+	
+	function load_files(){
+		$('.file-list-holder').empty();
+		$.ajax({
+	        type: "GET",
+	        contentType: "application/json",
+        	url: "/api/files",
+	        success: function( data, textStatus, jQxhr ){
+				for(i in data.files){
+					var f = data.files[i];
+					console.log(f);
+					var t = '<li class="list-group-item d-flex justify-content-between align-items-center">'
+					t += f._id 
+					t += "<button>[p]</button>"
+					t += "</li>";
+					$('.file-list-holder').append(t)
+				}
+	        },
+	        error: function( jqXhr, textStatus, errorThrown ){
+	            console.log( errorThrown );
+	        }
+	    });
+	}
+	load_files();
+
+</script>
