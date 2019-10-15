@@ -53,6 +53,7 @@ class server():
         self.printers = []
         self.printer_class = {}
 
+        self.pf = PrinterFarm()
         self.api = Api()
         self.app = Flask('OFarm')
         self.start()
@@ -122,8 +123,10 @@ class server():
         return response
 
     def printer(self, id):
-        p = printer(self.printers[0]['name'], self.printers[0]['url'], self.printers[0]['api']['key'])
-        return(p.get_version())
+        id = bson.ObjectId(id)
+        p = self.printer_class[id]['class']
+        print(p.name)
+        return(p.get_status(update = True))
 
 
     def upload_file(self):

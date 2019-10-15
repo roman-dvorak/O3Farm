@@ -3,12 +3,39 @@ import requests
 import datetime
 
 
+
+
+
+class PrinterFarm(object):
+	def __init__(self):
+		self.printers = {}
+
+	def add_printer(self, printer):
+		pass
+
+		
+
+
+'''
+	local_status:
+		0- Disabled - light-gray
+		1 - Offline - gray
+		2 - Ready - green
+		3 - Printing - blue
+		4 - Post printing - orange
+		5 - Error - red
+
+
+'''
+
 class GenericPrinter(object):
 	def __init__(self):
 		self.platform = 'generic'
 		self.name = 'Generic printer'
 		self.last_update = None
 		self.url = ''
+		self.id = ''
+		self.local_state = 0;
 		self.status = {
 		    "text": "OF disconnected",
 		    "flags": {
@@ -57,6 +84,7 @@ class GenericPrinter(object):
 			'url': self.url,
 			'platform': self.platform,
 			'last_update': self.last_update,
+			'id': str(self.id)
 		}
 		# tady budou informace o tom, co je to za tiskarnu atd..
 
@@ -91,6 +119,7 @@ class OctoprintPrinter(GenericPrinter):
 			printer = self.make_request('/api/printer')
 			job = self.make_request('/api/job')
 			self.status = {**printer, **job}
+			self.status['local_state'] = self.local_state
 			self.last_update = datetime.datetime.now()
 
 		return self.status

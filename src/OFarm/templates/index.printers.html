@@ -1,4 +1,31 @@
 
+<style type="text/css">
+	
+	.local-status-bg-0{
+		background: gray;
+	}
+
+	.local-status-bg-1{
+		background: gray;
+	}
+
+	.local-status-bg-2{
+		background: green;
+	}
+
+	.local-status-bg-3{
+		background: blue;
+	}
+
+	.local-status-bg-4{
+		background: orange;
+	}
+
+	.local-status-bg-5{
+		background: red;
+	}
+
+</style>
 
 <div style="card">
 	<div class="card-body">
@@ -15,6 +42,25 @@
 {% include 'index.printers.card.template.html' %}
 
 <script type="text/javascript">
+
+
+function load_printer(id){
+	$.ajax({
+        type: "GET",
+        contentType: "application/json; charset=utf-8",
+        url: "/printer/"+id,
+        success: function( data, textStatus, jQxhr ){
+			console.log(data);
+			
+        },
+        error: function( jqXhr, textStatus, errorThrown ){
+            console.log( errorThrown );
+        }
+    });
+
+
+
+}
 	
 
 function reload_printers(){
@@ -30,7 +76,10 @@ function reload_printers(){
 				var tmp = document.getElementById("printer_card_template").content.cloneNode(true);
 				tmp.querySelector('.name').innerText = p.info.name;
 				tmp.querySelector('.web_link').href = p.info.url;
-				tmp.querySelector('.printer_state').innerText = p.status.state.text;
+				tmp.querySelector('.printer_state').innerText = p.status.state;
+
+				tmp.querySelector('.card-header').classList.add("local-status-bg-"+String(p.status.local_state));
+				tmp.querySelector('.card-header').setAttribute("onclick","load_printer('"+p.info.id+"');");
 
 				var temp = "";
 				for(t in p.status.temperature){
