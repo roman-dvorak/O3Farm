@@ -63,10 +63,16 @@ function load_printer(id){
 			$("#printer-details .printer-status-tpt").text(data.status.job.lastPrintTime/60.0);
 			$("#printer-details .printer-status-pt").text(data.status.job.estimatedPrintTime/60.0);
 			$("#printer-details .printer-status-ptl").text(data.status.job.estimatedPrintTime/60.0);
-			var t = "";
-			t += ", Ol: " + data.online;
-			t += ", Dist: " + data.disabled;
-			$("#printer-details .printer-status-flags").text(t);
+			var t = "<small>";
+			t += ", Onlinel: " + data.online;
+			t += ", eneabeld: " + data.enabled;
+			t += ", error: " + data.error;
+			t += ", prepared: " + data.prepared;
+			t += ", printing: " + data.printing;
+			t += ", pasued: " + data.paused;
+			t += "</small><br>";
+			t += "Text state: " + data.text_state;
+			$("#printer-details .printer-status-flags").html(t);
 			
         },
         error: function( jqXhr, textStatus, errorThrown ){

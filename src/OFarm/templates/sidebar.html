@@ -64,10 +64,7 @@
     
   </div>
 </div>
-
 <div>
-	
-
 </div>
 
 
@@ -114,7 +111,7 @@
 					console.log(f);
 					var t = '<li class="list-group-item d-flex justify-content-between align-items-center">'
 					t += f._id 
-					t += "<button>[p]</button>"
+					t += "<button onclick='add_to_query(\""+f._id+"\")'>[p]</button>"
 					t += "</li>";
 					$('.file-list-holder').append(t)
 				}
@@ -125,5 +122,30 @@
 	    });
 	}
 	load_files();
+
+</script>
+
+
+<script type="text/javascript">
+	
+	function add_to_query(id){
+	$.ajax({
+	        type: "POST",
+	        //content-type: "application/json",
+        	contentType: "application/json",
+        	dataType: "json",
+	        url: "/api/query",
+	        data: JSON.stringify({
+	        	'id': id
+	        }),
+	        success: function( data, textStatus, jQxhr ){
+				console.log(data)
+	        },
+	        error: function( jqXhr, textStatus, errorThrown ){
+	            console.log( errorThrown );
+	        }
+	    });	
+	}
+
 
 </script>

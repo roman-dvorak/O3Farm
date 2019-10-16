@@ -13,7 +13,7 @@ import bson
 
 class PrinterFarm(object):
 
-    states = ['Disabled', 'Offline', 'Ready', 'Printing', 'Done', 'Error']
+    states = ['enabled', 'Offline', 'Ready', 'Printing', 'Done', 'Error']
 
     def __init__(self, db):
         self.printers = {}
@@ -41,10 +41,10 @@ class PrinterFarm(object):
     def set_eneable(self):
         args =  json.loads(request.data)
         id = bson.ObjectId(args['id'])
-        self.objects[id].disabled = not args['eneable']
+        self.objects[id].enabled = args['eneable']
         self.db.printers.update(
             {"_id": id},
-            {'$set': {'disabled': not args['eneable']}}
+            {'$set': {'enabled': args['eneable']}}
         )
         return {"status": "ok"}
 
@@ -79,15 +79,19 @@ class PrinterFarm(object):
                         'status': self.objects[p].get_status(),
                         'last_update': self.objects[p].last_update,
                         'local_state': self.objects[p].local_state,
-                        'disabled': self.objects[p].disabled,
-                        'online': self.objects[p].online
-                    }
+                        'enabled': self.objects[p].enabled,
+                        'online': self.objects[p].online,
+                        'error': self.objects[p].error,
+                        'printing': self.objects[p].printing,
+                        'paused': self.objects[p].paused,
+                        'prepared': self.objects[p].prepared,
+                        'text_state': self.objects[p].get_text_state()                    }
                 })
 
 
 '''
     local_status:
-        0- Disabled - light-gray
+        0- enabled - light-gray
         1 - Offline - gray
         2 - Ready - green
         3 - Printing - blue
@@ -106,9 +110,13 @@ class GenericPrinter(object):
         self.api_key = ''
         self.id = ''
         self.local_state = 0;
-        self.disabled = True
+        self.enabled = True
         self.online = False
         self.connected = False
+        self.error = False
+        self.printing = False
+        self.paused = False
+        self.prepared = False
         self.status = {}
 
 
@@ -121,8 +129,34 @@ class GenericPrinter(object):
         self.platform = db['platform']
         self.api_key = db['api_key']
         self.url = db['url']
-        self.disabled= db.get('disabled', True)
+        self.enabled= db.get('enabled', True)
         self.last_update = datetime.datetime(year = 1997, month = 1, day = 1)
+
+    def get_text_state(self):
+        if not self.online:
+            return "Offline"
+
+        if not self.enabled:
+            if self.error:
+                return "Disabled with Error"
+            else:
+                return "Disabled"
+
+        if self.error:
+            return "Error"
+
+        if self.printing and self.paused:
+            return "Printing paused"
+
+        if self.printing:
+            return "Printing"
+
+        if not self.prepared:
+            return "Waiting for preparition"
+
+        return "Waiting for task :-)"
+
+
 
     def get_version(self):
         pass
