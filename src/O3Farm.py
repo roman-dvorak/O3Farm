@@ -1,5 +1,5 @@
 def main():
-	from OFarm.server import server
+	from O3Farm.server import server
 	s = server();
 
 

@@ -25,7 +25,7 @@ import sys
 import requests
 from .api import Api
 
-from OFarm.printer import *
+from O3Farm.printer import *
 
 
 class printer():
@@ -57,8 +57,8 @@ class server():
 
         self.pf = PrinterFarm(self.db)
         #self.pf.start()
-        self.api = Api(self.db)
-        self.app = Flask('OFarm')
+        self.api = Api(self.db, self.pf)
+        self.app = Flask('OFarm', template_folder='O3Farm/templates')
         self.start()
 
         self.app.config['TEMPLATES_AUTO_RELOAD'] = True

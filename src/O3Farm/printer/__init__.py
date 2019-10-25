@@ -53,9 +53,13 @@ class PrinterFarm(object):
     def get_printer(self, id, update = False):
         if update:
             self.update_printers(id)
-        printers = dict(self.db.printers.find_one({"_id": id}))
-        print(printers)
-        return printers
+        printer = dict(self.db.printers.find_one({"_id": id}))
+        print(printer)
+        return printer
+
+    def get_printer_class(self, printer):
+        pcls = self.objects.get(printer)
+        return pcls
 
     def get_printers(self, update = True):
         if update:
@@ -233,4 +237,29 @@ class OctoprintPrinter(GenericPrinter):
                 #self.last_update = datetime.datetime.now()
 
         return self.status
+ 
+    
+    def upload_file(self, file, select = True):
+        headers = {
+            'X-Api-Key': self.api_key
+        }
+
+        url = self.url+'/api/files/{}'.format('local')
+        file={'file': open('/home/roman/tower.gcode', 'rb'), 'filename': 't.gcode'}
+        payload={'select': 'true','print': 'false' }
+        
+        response = requests.post(url, files=file, data=payload, headers=headers)
+        print(response.text)
+
+        self.last_update = datetime.datetime.now()
+        self.online = True
+
+        print("Done")
+        return True
+
+
+    def print(self):
+        self.client.start()
+        self.client.pause()
+        
         

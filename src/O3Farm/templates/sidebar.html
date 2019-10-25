@@ -1,5 +1,5 @@
 <div class="card mt-3">
-  <h5 class="card-header">OFarm - Testovací farma</h5>
+  <h5 class="card-header">O3Farm - Testovací farma</h5>
   <div class="card-body" id="printer-details" style="display: none;">
 
   	<h3 class="mb-0 printer-name printer-values"> Prinetr </h3>
@@ -136,7 +136,8 @@
         	dataType: "json",
 	        url: "/api/query",
 	        data: JSON.stringify({
-	        	'id': id
+	        	'operation': 'add_to_query',
+	        	'file_id': id
 	        }),
 	        success: function( data, textStatus, jQxhr ){
 				console.log(data)

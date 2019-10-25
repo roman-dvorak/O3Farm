@@ -1,0 +1,85 @@
+<div style="card">
+	<div class="card-body">
+		<h4 class="card-title">Home</h4>
+		
+		<div class="card">
+			<h3 class="card-header">Printer jobs</h3>
+			<div class="card-body">
+				<div class="card">
+					<div id="jobs-table"></div>
+				</div>	
+			</div>
+		</div>
+		
+		<div class="card">
+			<h3 class="card-header">Printer jobs - history</h3>
+			<div class="card-body">
+			</div>			
+		</div>
+	</div>
+</div>
+
+
+
+<script type="text/javascript">
+
+	var printIcon = function(cell, formatterParams){ //plain text value
+    	return "<i class='fa fa-print'>UP</i>";
+	};
+	
+	function SelectJob(id){
+		console.log(id._id.$oid);
+
+		$.ajax({
+	        type: "POST",
+	        contentType: "application/json; charset=utf-8",
+	        url: "/api/print",
+	        data: JSON.stringify({
+		        	'operation': 'SelectJob',
+		        	'printer': actual_printer,
+		        	'job': id._id.$oid,
+		        }),
+	        success: function( data, textStatus, jQxhr ){
+				console.log(data);
+				
+	        },
+	        error: function( jqXhr, textStatus, errorThrown ){
+	            console.log( errorThrown );
+	        }
+    	});
+	}
+
+	var table = new Tabulator("#jobs-table", {
+		height:205,
+		layout:"fitColumns",
+		placeholder:"No Data",
+		columns:[
+			{title:"Job_id", field:"_id.$oid", sorter:"string", width:200},
+			{title:"Send", formatter:printIcon, width:40, align:"center", cellClick:function(e, cell){SelectJob(cell.getRow().getData())}},
+			{title:"File_id", field:"file_id", sorter:"string"},
+			{title:"File", field:"file"},
+			{title:"State", field:"state", formatter:"string", align:"center", width:100},
+			{title:"Created", field:"created", align:"center"},
+		],
+		//rowClick:function(e, row){ //trigger an alert message when the row is clicked
+		//	alert("Row " + row.getData().id + " Clicked!!!!");
+		//},
+	});
+
+
+	function init_jobs_table() {
+		var ajaxConfig = {
+			method: "GET", //set request type to Position
+			headers: {
+				"Content-type": 'application/json; charset=utf-8', //set specific content type
+			}
+		};
+
+    	table.setData("/api/query", {'operation': 'get_queries'}, ajaxConfig);
+	}
+
+	init_jobs_table();
+
+
+
+</script>
